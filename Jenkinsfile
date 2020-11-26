@@ -228,6 +228,7 @@ pipeline {
             }
           }
           steps{
+            echo '\${pullRequest.labels}'
             withMaven(jdk: 'jdk-8-latest', maven: 'maven-3.2-latest', mavenSettingsConfig: 'camunda-maven-settings', options: [artifactsPublisher(disabled: true), junitPublisher(disabled: true)]) {
               runMaven(true, false, false, 'engine-rest/engine-rest/', 'clean install -Presteasy3')
             }
