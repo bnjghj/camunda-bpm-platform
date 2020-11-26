@@ -49,96 +49,96 @@ pipeline {
       string defaultValue: 'pipeline-master', description: 'The name of the EE branch to run the EE pipeline on', name: 'EE_BRANCH_NAME'
   }
   stages {
-    stage('Test 0') {
-      agent {
-        kubernetes {
-          yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
-        }
-      }
-      stages('Test 1') {
-        stage('ASSEMBLY') {
-          agent none
-          steps {
-            withMaven(jdk: 'jdk-8-latest', maven: 'maven-3.2-latest', mavenSettingsConfig: 'camunda-maven-settings', options: [artifactsPublisher(disabled: true), junitPublisher(disabled: true)]) {
-              nodejs('nodejs-14.6.0'){
-                 configFileProvider([configFile(fileId: 'maven-nexus-settings', variable: 'MAVEN_SETTINGS_XML')]) {
-                   sh """
-                     mvn -s \$MAVEN_SETTINGS_XML clean install source:jar -Pdistro,distro-ce,distro-wildfly,distro-webjar -DskipTests -Dmaven.repo.local=\${WORKSPACE}/.m2 com.mycila:license-maven-plugin:check -B
-                   """
-                 }
-              }
-
-              // archive all .jar, .pom, .xml, .txt runtime artifacts + required .war/.zip/.tar.gz for EE pipeline
-              // add a new line for each group of artifacts
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/*.jar,.m2/org/camunda/**/*-SNAPSHOT/**/*.pom,.m2/org/camunda/**/*-SNAPSHOT/**/*.xml,.m2/org/camunda/**/*-SNAPSHOT/**/*.txt', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-webapp*frontend-sources.zip', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/license-book*.zip', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-jboss-modules*.zip', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-*-assembly*.tar.gz', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-webapp*.war', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-engine-rest*.war', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-example-invoice*.war', followSymlinks: false
-              archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-h2-webapp*.war', followSymlinks: false
-            
-              stash name: "platform-stash-runtime", includes: ".m2/org/camunda/**/*-SNAPSHOT/**", excludes: "**/qa/**,**/*qa*/**,**/*.zip,**/*.tar.gz"
-              stash name: "platform-stash-archives", includes: ".m2/org/camunda/bpm/**/*-SNAPSHOT/**/*.zip,.m2/org/camunda/bpm/**/*-SNAPSHOT/**/*.tar.gz"
-              stash name: "platform-stash-qa", includes: ".m2/org/camunda/bpm/**/qa/**/*-SNAPSHOT/**,.m2/org/camunda/bpm/**/*qa*/**/*-SNAPSHOT/**", excludes: "**/*.zip,**/*.tar.gz"
-            }
-          }
-        }
-        stage('Trigger Downstream') {
-          parallel {
-            stage('Trigger EE') {
-              agent none
-              options {
-                skipDefaultCheckout true
-              }
-              when {
-                anyOf {
-                  branch 'pipeline-prs';
-                  allOf {
-                    changeRequest();
-                    expression {
-                      withLabels('all-db','rolling-update','migration','h2','db2')
-                    }
-                  }
-                }
-              }
-              steps {
-                build job: "cambpm-jenkins-pipelines-ee/${params.EE_BRANCH_NAME}", parameters: [
-                    string(name: 'copyArtifactSelector', value: '<TriggeredBuildSelector plugin="copyartifact@1.45.1">  <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>  <allowUpstreamDependencies>false</allowUpstreamDependencies></TriggeredBuildSelector>'),
-                    booleanParam(name: 'STANDALONE', value: false),
-                    string(name: 'CE_BRANCH_NAME', value: "${env.BRANCH_NAME}")
-                ], quietPeriod: 10, wait: false
-              }
-            }
-            stage('Trigger QA') {
-              agent none
-              options {
-                skipDefaultCheckout true
-              }
-              when {
-                anyOf {
-                  branch 'pipeline-master';
-                  allOf {
-                    changeRequest();
-                    expression {
-                      withLabels('all-db','rolling-update','migration','h2','db2')
-                    }
-                  }
-                }
-              }
-              steps {
-                build job: "cambpm-jenkins-pipelines-daily/${env.BRANCH_NAME}", parameters: [
-                    string(name: 'copyArtifactSelector', value: '<TriggeredBuildSelector plugin="copyartifact@1.45.1">  <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>  <allowUpstreamDependencies>false</allowUpstreamDependencies></TriggeredBuildSelector>'),
-                    booleanParam(name: 'STANDALONE', value: false)
-                ], quietPeriod: 10, wait: false
-              }
-            }
-          }
-        }
-      }
-    }
+    //stage('Test 0') {
+    //  agent {
+    //    kubernetes {
+    //      yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
+    //    }
+    //  }
+    //  stages('Test 1') {
+    //    stage('ASSEMBLY') {
+    //      agent none
+    //      steps {
+    //        withMaven(jdk: 'jdk-8-latest', maven: 'maven-3.2-latest', mavenSettingsConfig: 'camunda-maven-settings', options: [artifactsPublisher(disabled: true), junitPublisher(disabled: true)]) {
+    //          nodejs('nodejs-14.6.0'){
+    //             configFileProvider([configFile(fileId: 'maven-nexus-settings', variable: 'MAVEN_SETTINGS_XML')]) {
+    //               sh """
+    //                 mvn -s \$MAVEN_SETTINGS_XML clean install source:jar -Pdistro,distro-ce,distro-wildfly,distro-webjar -DskipTests -Dmaven.repo.local=\${WORKSPACE}/.m2 com.mycila:license-maven-plugin:check -B
+    //               """
+    //             }
+    //          }
+    //
+    //          // archive all .jar, .pom, .xml, .txt runtime artifacts + required .war/.zip/.tar.gz for EE pipeline
+    //          // add a new line for each group of artifacts
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/*.jar,.m2/org/camunda/**/*-SNAPSHOT/**/*.pom,.m2/org/camunda/**/*-SNAPSHOT/**/*.xml,.m2/org/camunda/**/*-SNAPSHOT/**/*.txt', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-webapp*frontend-sources.zip', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/license-book*.zip', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-jboss-modules*.zip', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-*-assembly*.tar.gz', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-webapp*.war', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-engine-rest*.war', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-example-invoice*.war', followSymlinks: false
+    //          archiveArtifacts artifacts: '.m2/org/camunda/**/*-SNAPSHOT/**/camunda-h2-webapp*.war', followSymlinks: false
+    //        
+    //          stash name: "platform-stash-runtime", includes: ".m2/org/camunda/**/*-SNAPSHOT/**", excludes: "**/qa/**,**/*qa*/**,**/*.zip,**/*.tar.gz"
+    //          stash name: "platform-stash-archives", includes: ".m2/org/camunda/bpm/**/*-SNAPSHOT/**/*.zip,.m2/org/camunda/bpm/**/*-SNAPSHOT/**/*.tar.gz"
+    //          stash name: "platform-stash-qa", includes: ".m2/org/camunda/bpm/**/qa/**/*-SNAPSHOT/**,.m2/org/camunda/bpm/**/*qa*/**/*-SNAPSHOT/**", excludes: "**/*.zip,**/*.tar.gz"
+    //        }
+    //      }
+    //    }
+    //    stage('Trigger Downstream') {
+    //      parallel {
+    //        stage('Trigger EE') {
+    //          agent none
+    //          options {
+    //            skipDefaultCheckout true
+    //          }
+    //          when {
+    //            anyOf {
+    //              branch 'pipeline-prs';
+    //              allOf {
+    //                changeRequest();
+    //                expression {
+    //                  withLabels('all-db','rolling-update','migration','h2','db2')
+    //                }
+    //              }
+    //            }
+    //          }
+    //          steps {
+    //            build job: "cambpm-jenkins-pipelines-ee/${params.EE_BRANCH_NAME}", parameters: [
+    //                string(name: 'copyArtifactSelector', value: '<TriggeredBuildSelector plugin="copyartifact@1.45.1">  <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>  <allowUpstreamDependencies>false</allowUpstreamDependencies></TriggeredBuildSelector>'),
+    //                booleanParam(name: 'STANDALONE', value: false),
+    //                string(name: 'CE_BRANCH_NAME', value: "${env.BRANCH_NAME}")
+    //            ], quietPeriod: 10, wait: false
+    //          }
+    //        }
+    //        stage('Trigger QA') {
+    //          agent none
+    //          options {
+    //            skipDefaultCheckout true
+    //          }
+    //          when {
+    //            anyOf {
+    //              branch 'pipeline-master';
+    //              allOf {
+    //                changeRequest();
+    //                expression {
+    //                  withLabels('all-db','rolling-update','migration','h2','db2')
+    //                }
+    //              }
+    //            }
+    //          }
+    //          steps {
+    //            build job: "cambpm-jenkins-pipelines-daily/${env.BRANCH_NAME}", parameters: [
+    //                string(name: 'copyArtifactSelector', value: '<TriggeredBuildSelector plugin="copyartifact@1.45.1">  <upstreamFilterStrategy>UseGlobalSetting</upstreamFilterStrategy>  <allowUpstreamDependencies>false</allowUpstreamDependencies></TriggeredBuildSelector>'),
+    //                booleanParam(name: 'STANDALONE', value: false)
+    //            ], quietPeriod: 10, wait: false
+    //          }
+    //        }
+    //      }
+    //    }
+    //  }
+    //}
     stage('h2 tests') {
       parallel {
         stage('engine-UNIT-h2') {
@@ -711,9 +711,9 @@ pipeline {
 }
 
 void runMaven(boolean runtimeStash, boolean archivesStash, boolean qaStash, String directory, String cmd, boolean singleThreaded = false) {
-  if (runtimeStash) unstash "platform-stash-runtime"
-  if (archivesStash) unstash "platform-stash-archives"
-  if (qaStash) unstash "platform-stash-qa"
+  //if (runtimeStash) unstash "platform-stash-runtime"
+  //if (archivesStash) unstash "platform-stash-archives"
+  //if (qaStash) unstash "platform-stash-qa"
   String forkCount = singleThreaded? "-DforkCount=1" : '';
   configFileProvider([configFile(fileId: 'maven-nexus-settings', variable: 'MAVEN_SETTINGS_XML')]) {
     sh("mvn -s \$MAVEN_SETTINGS_XML ${forkCount} ${cmd} -nsu -Dmaven.repo.local=\${WORKSPACE}/.m2  -f ${directory}/pom.xml -B")
