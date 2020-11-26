@@ -264,7 +264,6 @@ pipeline {
                 changeRequest();
                 expression {
                   withLabels('all-as','tomcat')
-                  elaluateConditions()
                 }
               }
             }
