@@ -216,9 +216,9 @@ pipeline {
               branch 'pipeline-master';
               allOf {
                 changeRequest();
-                expression {
-                  withLabels('rest-api')
-                }
+                //expression {
+                //  withLabels('rest-api')
+                //}
               }
             }
           }
