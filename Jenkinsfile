@@ -1,6 +1,7 @@
 // https://github.com/camunda/jenkins-global-shared-library
 @Library('camunda-ci') _
 
+
 String getAgent(String dockerImage = 'gcr.io/ci-30-162810/centos:v0.4.6', Integer cpuLimit = 4){
   String mavenForkCount = cpuLimit;
   String mavenMemoryLimit = cpuLimit * 2;
