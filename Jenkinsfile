@@ -722,7 +722,7 @@ void runMaven(boolean runtimeStash, boolean archivesStash, boolean qaStash, Stri
 
 void withLabels(String... labels) {
   for ( l in labels) {
-    pullRequest.labels.contains(labelName)
+    pullRequest.labels.contains(l)
   }
 }
 
