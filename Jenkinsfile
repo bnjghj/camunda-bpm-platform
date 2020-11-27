@@ -52,7 +52,7 @@ pipeline {
     stage('First stage') {
       agent {
         kubernetes {
-          yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
+          yaml getAgent()
         }
       }
       steps {
@@ -62,18 +62,23 @@ pipeline {
       }
     }
     stage('Second stages') {
-      agent {
-        kubernetes {
-          yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
-        }
-      }
       parallel {
         stage('Dependent stage') {
+          agent {
+            kubernetes {
+              yaml getAgent()
+            }
+          }
           steps {
             sh 'exit 0'
           }
         }
         stage('Independent stage') {
+          agent {
+            kubernetes {
+              yaml getAgent()
+            }
+          }
           steps {
             sh 'exit 0'
           }
