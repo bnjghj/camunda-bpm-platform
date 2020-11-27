@@ -60,16 +60,12 @@ pipeline {
       parallel {
         stage('Dependent stage') {
           steps {
-            catchError(stageResult: 'FAILURE') {
-              sh 'exit 0'
-            }
+            sh 'exit 0'
           }
         }
         stage('Independent stage') {
           steps {
-            catchError(stageResult: 'FAILURE') {
-              sh 'exit 0'
-            }
+            sh 'exit 0'
           }
         }
       }
