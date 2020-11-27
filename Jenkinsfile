@@ -50,6 +50,11 @@ pipeline {
   }
   stages {
     stage('First stage') {
+      agent {
+        kubernetes {
+          yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
+        }
+      }
       steps {
         catchError(stageResult: 'FAILURE') {
           sh "exit 1"
@@ -57,6 +62,11 @@ pipeline {
       }
     }
     stage('Second stages') {
+      agent {
+        kubernetes {
+          yaml getAgent('gcr.io/ci-30-162810/centos:v0.4.6', 16)
+        }
+      }
       parallel {
         stage('Dependent stage') {
           steps {
