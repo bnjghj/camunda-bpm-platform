@@ -70,7 +70,9 @@ pipeline {
             }
           }
           steps {
-            sh 'exit 0'
+            catchError(stageResult: 'FAILURE') {
+              sh 'exit 0'
+            }
           }
         }
         stage('Independent stage') {
@@ -80,7 +82,9 @@ pipeline {
             }
           }
           steps {
-            sh 'exit 0'
+            catchError(stageResult: 'FAILURE') {
+              sh 'exit 0'
+            }
           }
         }
       }
