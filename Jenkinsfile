@@ -51,7 +51,7 @@ pipeline {
   stages {
     stage('First stage') {
       steps {
-        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        catchError {
           sh 'exit 1'
         }
       }
@@ -60,14 +60,14 @@ pipeline {
       parallel {
         stage('Dependent stage') {
           steps {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            catchError {
               sh 'exit 0'
             }
           }
         }
         stage('Independent stage') {
           steps {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            catchError {
               sh 'exit 0'
             }
           }
